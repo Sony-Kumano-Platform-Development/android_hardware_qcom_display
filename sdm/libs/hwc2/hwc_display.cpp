@@ -2661,7 +2661,19 @@ HWC2::Error HWCDisplay::SubmitDisplayConfig(hwc2_config_t config) {
     return HWC2::Error::None;
   }
 
-  DisplayError error = display_intf_->SetActiveConfig(config);
+  DisplayConfigVariableInfo display_config = {};
+  DisplayError error = display_intf_->GetConfig(config, &display_config);
+  if (error != kErrorNone) {
+    DLOGE("Failed to get %d config! Error: %d", config, error);
+    return HWC2::Error::BadConfig;
+  }
+
+  if (SetFrameBufferResolution(display_config.x_pixels, display_config.y_pixels)) {
+    DLOGE("Failed to update framebuffer resolution for config %d", config);
+    return HWC2::Error::BadConfig;
+  }
+
+  error = display_intf_->SetActiveConfig(config);
   if (error != kErrorNone) {
     DLOGE("Failed to set %d config! Error: %d", config, error);
     return HWC2::Error::BadConfig;
